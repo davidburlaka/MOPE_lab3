@@ -1,6 +1,22 @@
 from numpy import *
 from math import *
 import numpy as np
+from scipy.stats import t, f
+
+
+def table_student(prob, f3):
+    x_vec = [i*0.0001 for i in range(int(5/0.0001))]
+    par = 0.5 + prob/0.1*0.05
+    for i in x_vec:
+        if abs(t.cdf(i, f3) - par) < 0.000005:
+            return i
+
+
+def table_fisher(prob, d, f3):
+    x_vec = [i*0.001 for i in range(int(10/0.001))]
+    for i in x_vec:
+        if abs(f.cdf(i, 4-d, f3)-prob) < 0.0001:
+            return i
 
 m = int(input("Введіть m: "))
 
@@ -137,7 +153,8 @@ s4 = find_s(random_matrix_y[3][0], random_matrix_y[3][1], random_matrix_y[3][2])
 Gp = max(s1, s2, s3, s4) / (s1 + s2 + s3 + s4)
 f1 = m - 1
 f2 = rows
-Gt = 0.7679
+fisher = table_fisher(0.95, 1, f1 * 4)
+Gt = fisher / (fisher + f1 - 2)
 # Перевірка умови за критерієм Кохрена
 uniform = Gp <= Gt
 
@@ -171,11 +188,10 @@ t2 = find_t(beta2, Sbeta)
 t3 = find_t(beta3, Sbeta)
 t_list = [fabs(t0), fabs(t1), fabs(t2), fabs(t3)]
 b_list = [b0, b1, b2, b3]
-t_tabl = 2.306
 
 # Перевірка умови за критерієм Стьюдента
 for i in range(4):
-    if t_list[i] < t_tabl:
+    if t_list[i] < table_student(0.95, (m-1)*4):
         t_list[i] = 0
 
 for j in range(4):
@@ -199,7 +215,7 @@ f4 = rows - d
 f3 = f1 * f2
 Sad = m * (((yj1 - y1[0]) ** 2 + (yj2 - y1[1]) ** 2 + (yj3 - y1[2]) ** 2 + (yj4 - y1[3]) ** 2)) / f4
 Fp = Sad / Sbetakvadr
-Ft = 5.3
+Ft = table_fisher(0.95, d, (m-1)*4)
 
 print("\n")
 print("Рівняння регресії: ŷ = b0 + b1*x1 + b2*x2+ b3*x3 ")
